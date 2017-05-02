@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+			this.components = new System.ComponentModel.Container();
 			System.Windows.Forms.PictureBox pictureBox1;
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
 			System.Windows.Forms.PictureBox pictureBox2;
@@ -52,15 +53,17 @@
 			this.radioButtonPatientQuantityManual = new System.Windows.Forms.RadioButton();
 			this.radioButtonPatientQuantityAuto = new System.Windows.Forms.RadioButton();
 			this.dataGridViewFileContent = new System.Windows.Forms.DataGridView();
-			this.textBox = new System.Windows.Forms.TextBox();
-			this.textBoxKeyValue = new System.Windows.Forms.TextBox();
-			this.textBoxFirstLine = new System.Windows.Forms.TextBox();
-			this.textBoxWomanOld = new System.Windows.Forms.TextBox();
+			this.textBoxColumnHazardItems = new System.Windows.Forms.TextBox();
+			this.textBoxColumnKeyValue = new System.Windows.Forms.TextBox();
+			this.textBoxRowFirstLine = new System.Windows.Forms.TextBox();
+			this.textBoxColumnWomanOld = new System.Windows.Forms.TextBox();
 			this.textBoxColumnWoman = new System.Windows.Forms.TextBox();
 			this.textBoxColumnMan = new System.Windows.Forms.TextBox();
 			this.checkBoxCalculateTypePreliminary = new System.Windows.Forms.CheckBox();
 			this.checkBoxCalculateTypePeriodical = new System.Windows.Forms.CheckBox();
 			this.buttonCalculate = new System.Windows.Forms.Button();
+			this.toolTipInfo = new System.Windows.Forms.ToolTip(this.components);
+			this.labelHint = new System.Windows.Forms.Label();
 			pictureBox1 = new System.Windows.Forms.PictureBox();
 			pictureBox2 = new System.Windows.Forms.PictureBox();
 			groupBox1 = new System.Windows.Forms.GroupBox();
@@ -90,7 +93,7 @@
 			// 
 			pictureBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
 			pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-			pictureBox1.Location = new System.Drawing.Point(0, 473);
+			pictureBox1.Location = new System.Drawing.Point(0, 502);
 			pictureBox1.Name = "pictureBox1";
 			pictureBox1.Size = new System.Drawing.Size(684, 10);
 			pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -101,7 +104,7 @@
 			// 
 			pictureBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			pictureBox2.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox2.Image")));
-			pictureBox2.Location = new System.Drawing.Point(572, 367);
+			pictureBox2.Location = new System.Drawing.Point(572, 396);
 			pictureBox2.Name = "pictureBox2";
 			pictureBox2.Size = new System.Drawing.Size(100, 100);
 			pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -133,7 +136,7 @@
 			this.buttonInfo.TabIndex = 6;
 			this.buttonInfo.Text = "?";
 			this.buttonInfo.UseVisualStyleBackColor = true;
-			this.buttonInfo.Click += new System.EventHandler(this.buttonInfo_Click);
+			this.buttonInfo.Click += new System.EventHandler(this.ButtonInfo_Click);
 			// 
 			// textBoxFilePath
 			// 
@@ -156,7 +159,7 @@
 			this.buttonSelectFile.TabIndex = 3;
 			this.buttonSelectFile.Text = "Выбрать";
 			this.buttonSelectFile.UseVisualStyleBackColor = true;
-			this.buttonSelectFile.Click += new System.EventHandler(this.buttonSelectFile_Click);
+			this.buttonSelectFile.Click += new System.EventHandler(this.ButtonSelectFile_Click);
 			// 
 			// groupBox2
 			// 
@@ -164,7 +167,7 @@
 			groupBox2.Controls.Add(this.textBoxPatientQuantity);
 			groupBox2.Controls.Add(this.radioButtonPatientQuantityManual);
 			groupBox2.Controls.Add(this.radioButtonPatientQuantityAuto);
-			groupBox2.Location = new System.Drawing.Point(12, 279);
+			groupBox2.Location = new System.Drawing.Point(12, 308);
 			groupBox2.Name = "groupBox2";
 			groupBox2.Size = new System.Drawing.Size(167, 69);
 			groupBox2.TabIndex = 7;
@@ -178,6 +181,9 @@
 			this.textBoxPatientQuantity.Name = "textBoxPatientQuantity";
 			this.textBoxPatientQuantity.Size = new System.Drawing.Size(40, 20);
 			this.textBoxPatientQuantity.TabIndex = 2;
+			this.toolTipInfo.SetToolTip(this.textBoxPatientQuantity, "Укажите количество пациентов для прохождения профосмотра\r\nот 1 до 50 - 1 группа п" +
+        "райса\r\nот 51 до 100 - 2 группа\r\nот 101 до 300 - 3 группа\r\nот 301 до 500 - 4 груп" +
+        "па\r\nот 501 - 5 группа");
 			// 
 			// radioButtonPatientQuantityManual
 			// 
@@ -189,7 +195,7 @@
 			this.radioButtonPatientQuantityManual.TabIndex = 1;
 			this.radioButtonPatientQuantityManual.Text = "Задать вручную:";
 			this.radioButtonPatientQuantityManual.UseVisualStyleBackColor = true;
-			this.radioButtonPatientQuantityManual.CheckedChanged += new System.EventHandler(this.radioButtonPatientQuantityManual_CheckedChanged);
+			this.radioButtonPatientQuantityManual.CheckedChanged += new System.EventHandler(this.RadioButtonPatientQuantityManual_CheckedChanged);
 			// 
 			// radioButtonPatientQuantityAuto
 			// 
@@ -212,7 +218,7 @@
 			groupBox3.Controls.Add(this.dataGridViewFileContent);
 			groupBox3.Location = new System.Drawing.Point(12, 77);
 			groupBox3.Name = "groupBox3";
-			groupBox3.Size = new System.Drawing.Size(660, 196);
+			groupBox3.Size = new System.Drawing.Size(660, 225);
 			groupBox3.TabIndex = 8;
 			groupBox3.TabStop = false;
 			groupBox3.Text = "Содержимое";
@@ -240,39 +246,43 @@
 			this.dataGridViewFileContent.Location = new System.Drawing.Point(6, 19);
 			this.dataGridViewFileContent.MultiSelect = false;
 			this.dataGridViewFileContent.Name = "dataGridViewFileContent";
+			this.dataGridViewFileContent.RowHeadersWidth = 60;
 			this.dataGridViewFileContent.ShowEditingIcon = false;
-			this.dataGridViewFileContent.Size = new System.Drawing.Size(648, 171);
+			this.dataGridViewFileContent.Size = new System.Drawing.Size(648, 200);
 			this.dataGridViewFileContent.TabIndex = 15;
 			// 
 			// groupBox4
 			// 
 			groupBox4.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-			groupBox4.Controls.Add(this.textBox);
+			groupBox4.Controls.Add(this.textBoxColumnHazardItems);
 			groupBox4.Controls.Add(label6);
-			groupBox4.Controls.Add(this.textBoxKeyValue);
-			groupBox4.Controls.Add(this.textBoxFirstLine);
+			groupBox4.Controls.Add(this.textBoxColumnKeyValue);
+			groupBox4.Controls.Add(this.textBoxRowFirstLine);
 			groupBox4.Controls.Add(label5);
 			groupBox4.Controls.Add(label4);
-			groupBox4.Controls.Add(this.textBoxWomanOld);
+			groupBox4.Controls.Add(this.textBoxColumnWomanOld);
 			groupBox4.Controls.Add(label3);
 			groupBox4.Controls.Add(this.textBoxColumnWoman);
 			groupBox4.Controls.Add(label2);
 			groupBox4.Controls.Add(this.textBoxColumnMan);
 			groupBox4.Controls.Add(label1);
-			groupBox4.Location = new System.Drawing.Point(185, 279);
+			groupBox4.Location = new System.Drawing.Point(185, 308);
 			groupBox4.Name = "groupBox4";
 			groupBox4.Size = new System.Drawing.Size(318, 90);
 			groupBox4.TabIndex = 10;
 			groupBox4.TabStop = false;
 			groupBox4.Text = "Расположение ключевых значений";
 			// 
-			// textBox
+			// textBoxColumnHazardItems
 			// 
-			this.textBox.Enabled = false;
-			this.textBox.Location = new System.Drawing.Point(138, 62);
-			this.textBox.Name = "textBox";
-			this.textBox.Size = new System.Drawing.Size(40, 20);
-			this.textBox.TabIndex = 11;
+			this.textBoxColumnHazardItems.Enabled = false;
+			this.textBoxColumnHazardItems.Location = new System.Drawing.Point(138, 62);
+			this.textBoxColumnHazardItems.Name = "textBoxColumnHazardItems";
+			this.textBoxColumnHazardItems.ShortcutsEnabled = false;
+			this.textBoxColumnHazardItems.Size = new System.Drawing.Size(40, 20);
+			this.textBoxColumnHazardItems.TabIndex = 11;
+			this.toolTipInfo.SetToolTip(this.textBoxColumnHazardItems, "Введите номер колонки, содержащей данное значение");
+			this.textBoxColumnHazardItems.WordWrap = false;
 			// 
 			// label6
 			// 
@@ -283,21 +293,27 @@
 			label6.TabIndex = 10;
 			label6.Text = "Пункты вредности:";
 			// 
-			// textBoxKeyValue
+			// textBoxColumnKeyValue
 			// 
-			this.textBoxKeyValue.Enabled = false;
-			this.textBoxKeyValue.Location = new System.Drawing.Point(138, 40);
-			this.textBoxKeyValue.Name = "textBoxKeyValue";
-			this.textBoxKeyValue.Size = new System.Drawing.Size(40, 20);
-			this.textBoxKeyValue.TabIndex = 9;
+			this.textBoxColumnKeyValue.Enabled = false;
+			this.textBoxColumnKeyValue.Location = new System.Drawing.Point(138, 40);
+			this.textBoxColumnKeyValue.Name = "textBoxColumnKeyValue";
+			this.textBoxColumnKeyValue.ShortcutsEnabled = false;
+			this.textBoxColumnKeyValue.Size = new System.Drawing.Size(40, 20);
+			this.textBoxColumnKeyValue.TabIndex = 9;
+			this.toolTipInfo.SetToolTip(this.textBoxColumnKeyValue, "Введите номер колонки, содержащей данное значение");
+			this.textBoxColumnKeyValue.WordWrap = false;
 			// 
-			// textBoxFirstLine
+			// textBoxRowFirstLine
 			// 
-			this.textBoxFirstLine.Enabled = false;
-			this.textBoxFirstLine.Location = new System.Drawing.Point(138, 18);
-			this.textBoxFirstLine.Name = "textBoxFirstLine";
-			this.textBoxFirstLine.Size = new System.Drawing.Size(40, 20);
-			this.textBoxFirstLine.TabIndex = 8;
+			this.textBoxRowFirstLine.Enabled = false;
+			this.textBoxRowFirstLine.Location = new System.Drawing.Point(138, 18);
+			this.textBoxRowFirstLine.Name = "textBoxRowFirstLine";
+			this.textBoxRowFirstLine.ShortcutsEnabled = false;
+			this.textBoxRowFirstLine.Size = new System.Drawing.Size(40, 20);
+			this.textBoxRowFirstLine.TabIndex = 8;
+			this.toolTipInfo.SetToolTip(this.textBoxRowFirstLine, "Введите номер строки, содержащей данное значение");
+			this.textBoxRowFirstLine.WordWrap = false;
 			// 
 			// label5
 			// 
@@ -317,13 +333,16 @@
 			label4.TabIndex = 6;
 			label4.Text = "Первая строка данных:";
 			// 
-			// textBoxWomanOld
+			// textBoxColumnWomanOld
 			// 
-			this.textBoxWomanOld.Enabled = false;
-			this.textBoxWomanOld.Location = new System.Drawing.Point(272, 63);
-			this.textBoxWomanOld.Name = "textBoxWomanOld";
-			this.textBoxWomanOld.Size = new System.Drawing.Size(40, 20);
-			this.textBoxWomanOld.TabIndex = 5;
+			this.textBoxColumnWomanOld.Enabled = false;
+			this.textBoxColumnWomanOld.Location = new System.Drawing.Point(272, 63);
+			this.textBoxColumnWomanOld.Name = "textBoxColumnWomanOld";
+			this.textBoxColumnWomanOld.ShortcutsEnabled = false;
+			this.textBoxColumnWomanOld.Size = new System.Drawing.Size(40, 20);
+			this.textBoxColumnWomanOld.TabIndex = 5;
+			this.toolTipInfo.SetToolTip(this.textBoxColumnWomanOld, "(опционально)\r\nВведите номер колонки, содержащей данное значение");
+			this.textBoxColumnWomanOld.WordWrap = false;
 			// 
 			// label3
 			// 
@@ -339,8 +358,11 @@
 			this.textBoxColumnWoman.Enabled = false;
 			this.textBoxColumnWoman.Location = new System.Drawing.Point(272, 39);
 			this.textBoxColumnWoman.Name = "textBoxColumnWoman";
+			this.textBoxColumnWoman.ShortcutsEnabled = false;
 			this.textBoxColumnWoman.Size = new System.Drawing.Size(40, 20);
 			this.textBoxColumnWoman.TabIndex = 3;
+			this.toolTipInfo.SetToolTip(this.textBoxColumnWoman, "(опционально)\r\nВведите номер колонки, содержащей данное значение");
+			this.textBoxColumnWoman.WordWrap = false;
 			// 
 			// label2
 			// 
@@ -356,8 +378,11 @@
 			this.textBoxColumnMan.Enabled = false;
 			this.textBoxColumnMan.Location = new System.Drawing.Point(272, 15);
 			this.textBoxColumnMan.Name = "textBoxColumnMan";
+			this.textBoxColumnMan.ShortcutsEnabled = false;
 			this.textBoxColumnMan.Size = new System.Drawing.Size(40, 20);
 			this.textBoxColumnMan.TabIndex = 1;
+			this.toolTipInfo.SetToolTip(this.textBoxColumnMan, "(опционально)\r\nВведите номер колонки, содержащей данное значение");
+			this.textBoxColumnMan.WordWrap = false;
 			// 
 			// label1
 			// 
@@ -373,7 +398,7 @@
 			groupBox5.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			groupBox5.Controls.Add(this.checkBoxCalculateTypePreliminary);
 			groupBox5.Controls.Add(this.checkBoxCalculateTypePeriodical);
-			groupBox5.Location = new System.Drawing.Point(509, 279);
+			groupBox5.Location = new System.Drawing.Point(509, 308);
 			groupBox5.Name = "groupBox5";
 			groupBox5.Size = new System.Drawing.Size(163, 79);
 			groupBox5.TabIndex = 12;
@@ -409,7 +434,7 @@
 			label7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			label7.AutoSize = true;
 			label7.ForeColor = System.Drawing.SystemColors.ControlDark;
-			label7.Location = new System.Drawing.Point(9, 441);
+			label7.Location = new System.Drawing.Point(9, 470);
 			label7.Name = "label7";
 			label7.Size = new System.Drawing.Size(110, 13);
 			label7.TabIndex = 13;
@@ -420,7 +445,7 @@
 			label8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			label8.AutoSize = true;
 			label8.ForeColor = System.Drawing.SystemColors.ControlDark;
-			label8.Location = new System.Drawing.Point(9, 454);
+			label8.Location = new System.Drawing.Point(9, 483);
 			label8.Name = "label8";
 			label8.Size = new System.Drawing.Size(143, 13);
 			label8.TabIndex = 14;
@@ -430,19 +455,40 @@
 			// 
 			this.buttonCalculate.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
 			this.buttonCalculate.Enabled = false;
-			this.buttonCalculate.Location = new System.Drawing.Point(287, 405);
+			this.buttonCalculate.Location = new System.Drawing.Point(287, 434);
 			this.buttonCalculate.Margin = new System.Windows.Forms.Padding(3, 20, 3, 3);
 			this.buttonCalculate.Name = "buttonCalculate";
 			this.buttonCalculate.Size = new System.Drawing.Size(110, 23);
 			this.buttonCalculate.TabIndex = 11;
 			this.buttonCalculate.Text = "Выполнить расчет";
 			this.buttonCalculate.UseVisualStyleBackColor = true;
+			this.buttonCalculate.Click += new System.EventHandler(this.ButtonCalculate_Click);
+			// 
+			// toolTipInfo
+			// 
+			this.toolTipInfo.AutoPopDelay = 5000;
+			this.toolTipInfo.InitialDelay = 100;
+			this.toolTipInfo.ReshowDelay = 100;
+			this.toolTipInfo.ToolTipIcon = System.Windows.Forms.ToolTipIcon.Info;
+			// 
+			// labelHint
+			// 
+			this.labelHint.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+			this.labelHint.BackColor = System.Drawing.SystemColors.Info;
+			this.labelHint.ImageKey = "(отсутствует)";
+			this.labelHint.Location = new System.Drawing.Point(170, 483);
+			this.labelHint.Name = "labelHint";
+			this.labelHint.Size = new System.Drawing.Size(350, 16);
+			this.labelHint.TabIndex = 15;
+			this.labelHint.Text = "Выберите файл для расчета";
+			this.labelHint.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			// 
 			// FormMain
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(684, 483);
+			this.ClientSize = new System.Drawing.Size(684, 512);
+			this.Controls.Add(this.labelHint);
 			this.Controls.Add(label8);
 			this.Controls.Add(label7);
 			this.Controls.Add(groupBox5);
@@ -480,16 +526,18 @@
         private System.Windows.Forms.CheckBox checkBoxCalculateTypePeriodical;
 		private System.Windows.Forms.TextBox textBoxPatientQuantity;
 		private System.Windows.Forms.TextBox textBoxFilePath;
-		private System.Windows.Forms.TextBox textBoxWomanOld;
+		private System.Windows.Forms.TextBox textBoxColumnWomanOld;
 		private System.Windows.Forms.TextBox textBoxColumnWoman;
 		private System.Windows.Forms.TextBox textBoxColumnMan;
-		private System.Windows.Forms.TextBox textBox;
-		private System.Windows.Forms.TextBox textBoxKeyValue;
-		private System.Windows.Forms.TextBox textBoxFirstLine;
+		private System.Windows.Forms.TextBox textBoxColumnHazardItems;
+		private System.Windows.Forms.TextBox textBoxColumnKeyValue;
+		private System.Windows.Forms.TextBox textBoxRowFirstLine;
 		private System.Windows.Forms.Button buttonSelectFile;
 		private System.Windows.Forms.Button buttonCalculate;
 		private System.Windows.Forms.Button buttonInfo;
 		private System.Windows.Forms.DataGridView dataGridViewFileContent;
+		private System.Windows.Forms.ToolTip toolTipInfo;
+		private System.Windows.Forms.Label labelHint;
 	}
 }
 

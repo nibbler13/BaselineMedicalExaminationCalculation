@@ -8,9 +8,16 @@ namespace BaselineMedicalExaminationCalculation {
 
 		public FormMain() {
             InitializeComponent();
+
+			dataGridViewFileContent.DragDrop += Control_DragDrop;
+			textBoxFilePath.DragDrop += Control_DragDrop;
         }
 
-        private void buttonSelectFile_Click(object sender, EventArgs e) {
+		private void Control_DragDrop(object sender, DragEventArgs e) {
+			Console.WriteLine(e.Data.GetData(DataFormats.FileDrop));
+		}
+
+		private void ButtonSelectFile_Click(object sender, EventArgs e) {
             OpenFileDialog dialog = new OpenFileDialog();
 			dialog.Multiselect = false;
             dialog.Filter = "CSV (разделители - запятые) (*.csv)|*.csv";
@@ -30,7 +37,7 @@ namespace BaselineMedicalExaminationCalculation {
 			}
         }
 
-		private void buttonInfo_Click(object sender, EventArgs e) {
+		private void ButtonInfo_Click(object sender, EventArgs e) {
 			MessageBox.Show("Help", "123", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 
@@ -39,9 +46,16 @@ namespace BaselineMedicalExaminationCalculation {
 				if (control.GetType() == typeof(GroupBox))
 					foreach (Control innerControl in control.Controls) {
 						innerControl.Enabled = true;
-						if (innerControl.GetType() == typeof(TextBox) &&
-							innerControl.Name != textBoxFilePath.Name)
+						if (innerControl is TextBox &&
+							innerControl.Name != textBoxFilePath.Name) {
 							innerControl.Text = "";
+							innerControl.TextChanged += InnerControl_TextChanged;
+							innerControl.KeyPress += InnerControl_KeyPress;
+						} else if (innerControl is CheckBox) {
+							(innerControl as CheckBox).CheckedChanged += InnerControl_CheckedChanged;
+						} else if (innerControl is RadioButton) {
+							(innerControl as RadioButton).CheckedChanged += InnerControl_CheckedChanged;
+						}
 					}
 			}
 
@@ -50,13 +64,55 @@ namespace BaselineMedicalExaminationCalculation {
 			checkBoxCalculateTypePeriodical.Checked = true;
 			checkBoxCalculateTypePreliminary.Checked = false;
 
+			checkBoxCalculateTypePeriodical.Enabled = false;
+			checkBoxCalculateTypePreliminary.Enabled = false;
+
 			Thread thread = new Thread(UpdateListView);
 			thread.Start();
 		}
 
+		private void InnerControl_CheckedChanged(object sender, EventArgs e) {
+			UpdateCalculateButtonState();
+		}
+
+		private void InnerControl_KeyPress(object sender, KeyPressEventArgs e) {
+			e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
+		}
+
+		private void InnerControl_TextChanged(object sender, EventArgs e) {
+			UpdateCalculateButtonState();
+		}
+
+		private void UpdateCalculateButtonState() {
+			bool IsSectionPatientsQuantityCorrect =
+				radioButtonPatientQuantityManual.Checked ?
+				!string.IsNullOrEmpty(textBoxPatientQuantity.Text) :
+				true;
+			if (!IsSectionPatientsQuantityCorrect)
+				labelHint.Text = "Укажите количество пациентов для расчета";
+
+			bool IsSectionKeyValuesCorrect =
+				!string.IsNullOrEmpty(textBoxRowFirstLine.Text) &&
+				!string.IsNullOrEmpty(textBoxColumnKeyValue.Text) &&
+				!string.IsNullOrEmpty(textBoxColumnHazardItems.Text);
+			if (!IsSectionKeyValuesCorrect)
+				labelHint.Text = "Укажите расположение ключевых значений в исходных данных";
+
+			bool IsSectionCalculationOptionCorrect = 
+				checkBoxCalculateTypePeriodical.Checked ||
+				checkBoxCalculateTypePreliminary.Checked;
+			if (!IsSectionCalculationOptionCorrect)
+				labelHint.Text = "Выберите вариант расчета стоимости";
+
+			buttonCalculate.Enabled =
+				IsSectionPatientsQuantityCorrect &&
+				IsSectionKeyValuesCorrect &&
+				IsSectionCalculationOptionCorrect;
+			labelHint.Visible = !buttonCalculate.Enabled;
+		}
+
 		private void UpdateListView() {
-			Console.WriteLine("update list view");
-			List<String[]> data = FileParser.GetFileContent(textBoxFilePath.Text);
+			List<String[]> data = FileParser.GetCsvFileContent(textBoxFilePath.Text);
 			if (data.Count == 0) {
 				MessageBox.Show(
 					"Файл не содержит данных",
@@ -84,11 +140,31 @@ namespace BaselineMedicalExaminationCalculation {
 				dataGridViewFileContent.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
 				dataGridViewFileContent.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 				dataGridViewFileContent.ResumeLayout();
+
+				UpdateCalculateButtonState();
 			});
 		}
 
-		private void radioButtonPatientQuantityManual_CheckedChanged(object sender, EventArgs e) {
+		private void RadioButtonPatientQuantityManual_CheckedChanged(object sender, EventArgs e) {
 			textBoxPatientQuantity.Enabled = radioButtonPatientQuantityManual.Checked;
+		}
+
+		private void ButtonCalculate_Click(object sender, EventArgs e) {
+			FileParser fileParser = new FileParser(
+				textBoxFilePath.Text,
+				radioButtonPatientQuantityAuto.Checked,
+				textBoxPatientQuantity.Text,
+				textBoxRowFirstLine.Text,
+				textBoxColumnKeyValue.Text,
+				textBoxColumnHazardItems.Text,
+				textBoxColumnMan.Text,
+				textBoxColumnWoman.Text,
+				textBoxColumnWomanOld.Text,
+				checkBoxCalculateTypePeriodical.Checked,
+				checkBoxCalculateTypePreliminary.Checked);
+
+			FormCalculating formCalculating = new FormCalculating(fileParser);
+			formCalculating.ShowDialog();
 		}
 	}
 }

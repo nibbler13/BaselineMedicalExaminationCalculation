@@ -7,3 +7,4 @@
 \\nnkk-fs\doks\nn-admin\мои документы\visual studio 2017\Projects\BaselineMedicalExaminationCalculation\BaselineMedicalExaminationCalculation\obj\Debug\BaselineMedicalExaminationCalculation.exe
 \\nnkk-fs\doks\nn-admin\мои документы\visual studio 2017\Projects\BaselineMedicalExaminationCalculation\BaselineMedicalExaminationCalculation\obj\Debug\BaselineMedicalExaminationCalculation.pdb
 \\nnkk-fs\doks\nn-admin\мои документы\visual studio 2017\Projects\BaselineMedicalExaminationCalculation\BaselineMedicalExaminationCalculation\obj\Debug\BaselineMedicalExaminationCalculation.FormMain.resources
+\\nnkk-fs\doks\nn-admin\мои документы\visual studio 2017\Projects\BaselineMedicalExaminationCalculation\BaselineMedicalExaminationCalculation\obj\Debug\BaselineMedicalExaminationCalculation.FormCalculating.resources
