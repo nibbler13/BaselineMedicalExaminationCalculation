@@ -8,3 +8,4 @@
 \\nnkk-fs\doks\nn-admin\Мои документы\Visual Studio 2017\Projects\BaselineMedicalExaminationCalculation\BaselineMedicalExaminationCalculation\obj\Release\BaselineMedicalExaminationCalculation.csproj.GenerateResource.Cache
 \\nnkk-fs\doks\nn-admin\Мои документы\Visual Studio 2017\Projects\BaselineMedicalExaminationCalculation\BaselineMedicalExaminationCalculation\obj\Release\BaselineMedicalExaminationCalculation.exe
 \\nnkk-fs\doks\nn-admin\Мои документы\Visual Studio 2017\Projects\BaselineMedicalExaminationCalculation\BaselineMedicalExaminationCalculation\obj\Release\BaselineMedicalExaminationCalculation.pdb
+\\nnkk-fs\doks\nn-admin\мои документы\visual studio 2017\Projects\BaselineMedicalExaminationCalculation\BaselineMedicalExaminationCalculation\obj\Release\BaselineMedicalExaminationCalculation.csprojResolveAssemblyReference.cache

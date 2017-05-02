@@ -258,14 +258,14 @@ namespace BaselineMedicalExaminationCalculation {
 					ws.Range["C" + line].Value = quantityMan;
 					ws.Range["D" + line].Value = costManTotal;
 
-					int costWoman = CalculatePlanCost(0, plans[key]);
+					int costWoman = CalculatePlanCost(1, plans[key]);
 					int quantityWoman = uniquePlans[key].GetWoman();
 					int costWomanTotal = costWoman * quantityWoman;
 					ws.Range["E" + line].Value = costWoman;
 					ws.Range["F" + line].Value = quantityWoman;
 					ws.Range["G" + line].Value = costWomanTotal;
 
-					int costOld = CalculatePlanCost(0, plans[key]);
+					int costOld = CalculatePlanCost(2, plans[key]);
 					int quantityOld = uniquePlans[key].GetWomanOld();
 					int costOldTotal = costOld * quantityOld;
 					ws.Range["H" + line].Value = costOld;
