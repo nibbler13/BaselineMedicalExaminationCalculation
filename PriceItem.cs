@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace BaselineMedicalExaminationCalculation {
-	class PriceItem {
+	public class PriceItem {
+		public string original { get; set; }
 		public string code { get; set; }
 		public string name { get; set; }
 		public int cost { get; set; }
@@ -15,6 +16,7 @@ namespace BaselineMedicalExaminationCalculation {
 		public bool isOldOnly { get; set; }
 
 		public PriceItem() {
+			original = "";
 			code = "";
 			name = "";
 			cost = 0;

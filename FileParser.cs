@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using Microsoft.VisualBasic.FileIO;
 using System.Text;
-using System.Reflection;
+using Microsoft.Office.Interop.Excel;
+using System.Linq;
 
 namespace BaselineMedicalExaminationCalculation {
 	public class FileParser {
@@ -28,7 +29,7 @@ namespace BaselineMedicalExaminationCalculation {
 		private Dictionary<string, List<string[]>> price;
 		private Dictionary<string, List<string[]>> serviceMatching;
 
-		private TextBox textBox;
+		private System.Windows.Forms.TextBox textBox;
 		private ProgressBar progressBar;
 
 		private const string errorTemplate = "===== ВНИМАНИЕ! ОШИБКА! =====";
@@ -58,7 +59,7 @@ namespace BaselineMedicalExaminationCalculation {
 			return result;
 		}
 
-		public void CalculateCostOfExaminations(TextBox textBox, ProgressBar progressBar) {
+		public void CalculateCostOfExaminations(System.Windows.Forms.TextBox textBox, ProgressBar progressBar) {
 			this.textBox = textBox;
 			this.progressBar = progressBar;
 
@@ -143,13 +144,210 @@ namespace BaselineMedicalExaminationCalculation {
 
 			UpdateProgressBar(70);
 			UpdateTextBox("Сопоставление услуг для наборов вредностей", true);
-			Dictionary<string, List<PriceItem>> uniquePlansWithPriceItems = AnalyzeBaselineExaminationPLans();
+			Dictionary<string, List<PriceItem>> uniquePlansWithPriceItems = 
+				AnalyzeBaselineExaminationPLans(patientQuantityCalculated);
 
-			UpdateProgressBar(100);
-			UpdateTextBox("Завершено", true);
+			UpdateProgressBar(90);
+			UpdateTextBox("Формирование итоговой таблицы Excel", true);
+			
+			bool excelGenerated = GenerateExcelTable(uniquePlansWithPriceItems);
+
+			if (excelGenerated) {
+				UpdateProgressBar(100);
+				UpdateTextBox("Завершено успешно", true);
+			} else {
+				UpdateProgressBar(0);
+				UpdateTextBox("Не удалось создать Excel файл");
+			}
 		}
 
-		private Dictionary<string, List<PriceItem>> AnalyzeBaselineExaminationPLans() {
+		private bool GenerateExcelTable(Dictionary<string, List<PriceItem>> plans) {
+			try {
+				Microsoft.Office.Interop.Excel.Application xlApp = new Microsoft.Office.Interop.Excel.Application();
+
+				if (xlApp == null) {
+					UpdateTextBox("Не удалось запустить MS Excel");
+					return false;
+				}
+
+				xlApp.Visible = true;
+			
+				Workbook wb = xlApp.Workbooks.Add();
+				Worksheet ws = (Worksheet)wb.ActiveSheet;
+
+				if (ws == null) {
+					UpdateTextBox("Не удалось создать Excel книгу");
+					return false;
+				}
+
+				List<string> keys = plans.Keys.ToList();
+				keys.Sort();
+
+				foreach(string key in keys) {
+					ws.Range["A1"].Value = key;
+					ws.Range["D1"].Value = CalculatePlanCost(0, plans[key]);
+					ws.Range["E1"].Value = CalculatePlanCost(1, plans[key]);
+					ws.Range["F1"].Value = CalculatePlanCost(2, plans[key]);
+					ws.Range["A2"].Value = "Название мероприятий";
+					ws.Range["B2"].Value = "Код услуги";
+					ws.Range["C2"].Value = "Название услуги";
+					ws.Range["D2"].Value = "Мужчины";
+					ws.Range["E2"].Value = "Женщины до 40 лет";
+					ws.Range["F2"].Value = "Женщины после 40 лет";
+					ws.Range["A1:F2"].Font.Bold = true;
+
+					List<PriceItem> sortedPriceItemsMain = plans[key].OrderBy(p1 => p1.name).Where(p1 => !p1.isOptional).ToList();
+					List<PriceItem> sortedPriceItemsOptional = plans[key].OrderBy(p1 => p1.name).Where(p1 => p1.isOptional).ToList();
+
+					int row = 3;
+					FillRangeWithItems(ws, sortedPriceItemsMain, ref row);
+
+					row += 2;
+					ws.Range["A" + row].Value = "Опциональные услуги";
+					ws.Range["A" + row].Font.Bold = true;
+					row++;
+
+					FillRangeWithItems(ws, sortedPriceItemsOptional, ref row);
+
+					ws.Columns[1].ColumnWidth = 40;
+					ws.Columns[2].ColumnWidth = 10;
+					ws.Columns[3].ColumnWidth = 90;
+					ws.Columns[4].ColumnWidth = 10;
+					ws.Columns[5].ColumnWidth = 20;
+					ws.Columns[6].ColumnWidth = 20;
+
+					wb.Worksheets.Add(After: ws);
+					ws = (Worksheet)wb.ActiveSheet;
+				}
+
+				ws.Range["A1"].Value = "Состав плана";
+				ws.Range["A1:A2"].Merge();
+				ws.Range["B1"].Value = "Мужчины";
+				ws.Range["B1:D1"].Merge();
+				ws.Range["E1"].Value = "Женщины до 40 лет";
+				ws.Range["E1:G1"].Merge();
+				ws.Range["H1"].Value = "Женщины после 40 лет";
+				ws.Range["H1:J1"].Merge();
+				ws.Range["K1"].Value = "Расположение";
+				ws.Range["K1:K2"].Merge();
+				ws.Range["B2"].Value = "Цена";
+				ws.Range["C2"].Value = "Кол-во";
+				ws.Range["D2"].Value = "Итого";
+				ws.Range["E2"].Value = "Цена";
+				ws.Range["F2"].Value = "Кол-во";
+				ws.Range["G2"].Value = "Итого";
+				ws.Range["H2"].Value = "Цена";
+				ws.Range["I2"].Value = "Кол-во";
+				ws.Range["J2"].Value = "Итого";
+				ws.Range["A1:K2"].Font.Bold = true;
+
+				ws.Columns[1].ColumnWidth = 130;
+				for (int i = 2; i < 11; i++) {
+					ws.Columns[i].ColumnWidth = 7;
+				}
+				ws.Columns[11].ColumnWidth = 14;
+
+				int line = 3;
+				foreach (string key in keys) {
+					ws.Range["A" + line].Value = key;
+
+					int costMan = CalculatePlanCost(0, plans[key]);
+					int quantityMan = uniquePlans[key].GetMan();
+					int costManTotal = costMan * quantityMan;
+					ws.Range["B" + line].Value = costMan;
+					ws.Range["C" + line].Value = quantityMan;
+					ws.Range["D" + line].Value = costManTotal;
+
+					int costWoman = CalculatePlanCost(0, plans[key]);
+					int quantityWoman = uniquePlans[key].GetWoman();
+					int costWomanTotal = costWoman * quantityWoman;
+					ws.Range["E" + line].Value = costWoman;
+					ws.Range["F" + line].Value = quantityWoman;
+					ws.Range["G" + line].Value = costWomanTotal;
+
+					int costOld = CalculatePlanCost(0, plans[key]);
+					int quantityOld = uniquePlans[key].GetWomanOld();
+					int costOldTotal = costOld * quantityOld;
+					ws.Range["H" + line].Value = costOld;
+					ws.Range["I" + line].Value = quantityOld;
+					ws.Range["J" + line].Value = costOldTotal;
+
+					ws.Range["K" + line].Value = "Лист " + (line - 2);
+					line++;
+				}
+
+
+				string pathToSave = Directory.GetCurrentDirectory() + "\\" + 
+					"Расчет стоимости - " + Path.GetFileName(filePath) + " " + 
+					DateTime.Now.ToLocalTime().ToString().Replace(":", ".") + ".xlsx";
+				Console.WriteLine("---- " + pathToSave);
+				wb.SaveAs(pathToSave);
+
+				UpdateTextBox("Результат расчета сохранен в файл: " + pathToSave);
+
+				return true;
+			} catch (Exception e) {
+				UpdateTextBox(errorTemplate + Environment.NewLine +
+					"Возникла ошибка: " + e.Message + " " + e.StackTrace);
+			}
+
+			return false;
+		}
+
+		// type 0 - man, 1 - woman, 2 - old
+		private int CalculatePlanCost(int type, List<PriceItem> items) {
+			int cost = 0;
+
+			foreach(PriceItem item in items) {
+				if (item.isOptional)
+					continue;
+
+				if (type == 0)
+					if (item.isWomanOnly || item.isOldOnly)
+						continue;
+
+				if (type == 1)
+					if (item.isManOnly || item.isOldOnly)
+						continue;
+
+				if (type == 2)
+					if (item.isManOnly)
+						continue;
+
+				cost += item.cost;
+			}
+
+			return cost;
+		}
+
+		private void FillRangeWithItems(Worksheet ws, List<PriceItem> items, ref int row) {
+			foreach (PriceItem priceItem in items) {
+				ws.Range["A" + row].Value = priceItem.original;
+				ws.Range["B" + row].Value = "'" + priceItem.code;
+				ws.Range["C" + row].Value = priceItem.name;
+
+				string costMan = "---";
+				string costWoman = "---";
+				string costOld = "---";
+
+				if (!priceItem.isWomanOnly && !priceItem.isOldOnly)
+					costMan = priceItem.cost.ToString();
+
+				if (!priceItem.isManOnly && !priceItem.isOldOnly)
+					costWoman = priceItem.cost.ToString();
+
+				if (!priceItem.isManOnly)
+					costOld = priceItem.cost.ToString();
+
+				ws.Range["D" + row].Value = costMan;
+				ws.Range["E" + row].Value = costWoman;
+				ws.Range["F" + row].Value = costOld;
+
+				row++;
+			}
+		}
+
+		private Dictionary<string, List<PriceItem>> AnalyzeBaselineExaminationPLans(int patientQuantityCalculated) {
 			Dictionary<string, List<PriceItem>> uniquePlansWithPriceItems = new Dictionary<string, List<PriceItem>>();
 
 			foreach (KeyValuePair<string, BaselineExaminationPlan> plan in uniquePlans) {
@@ -165,7 +363,7 @@ namespace BaselineMedicalExaminationCalculation {
 
 				AddNecesserilyServices(ref uniqueServices);
 
-				List<string> uniqueServiceCodes = MakeServiceToCodesMatching(uniqueServices);
+				Dictionary<string, string> uniqueServiceCodes = MakeServiceToCodesMatching(uniqueServices);
 				if (uniqueServiceCodes.Count == 0) {
 					UpdateTextBox(errorTemplate + Environment.NewLine +
 						"Не удалось обнаружить список кодов для данного набора");
@@ -177,11 +375,35 @@ namespace BaselineMedicalExaminationCalculation {
 				//эритроциты с базофильной зернистостью   851004
 				//При наличии этой услуги надо убрать общий анализ крови из обязательных услуг и заменить на этот код
 				//общий анализ крови 851000
-				if (uniqueServiceCodes.Contains("851005") || uniqueServiceCodes.Contains("851004"))
-					if (uniqueServiceCodes.Contains("851000"))
+				if (uniqueServiceCodes.Keys.Contains("851005") || 
+					uniqueServiceCodes.Keys.Contains("851004"))
+					if (uniqueServiceCodes.Keys.Contains("851000")) {
+						UpdateTextBox("Удаление услуги общий анализ крови, присутствует услуга 'тельца Гейнца' " +
+							"или 'эритроциты с базофильной зернистостью'");
 						uniqueServiceCodes.Remove("851000");
+					}
 
-				List<PriceItem> priceItems = MakeCodesToPriceMatching(uniqueServiceCodes, 1);
+				int patientsQuantity;
+				if (patientQuantityAuto) {
+					patientsQuantity = patientQuantityCalculated;
+				} else {
+					patientsQuantity = patientQuantityManual;
+				}
+
+				int priceLevel;
+				if (patientsQuantity > 0 && patientsQuantity <= 50) {
+					priceLevel = 1;
+				} else if (patientsQuantity > 50 && patientsQuantity <= 100) {
+					priceLevel = 2;
+				} else if (patientsQuantity > 100 && patientsQuantity <= 300) {
+					priceLevel = 3;
+				} else if (patientsQuantity > 300 && patientsQuantity < 500) {
+					priceLevel = 4;
+				} else {
+					priceLevel = 5;
+				}
+
+				List<PriceItem> priceItems = MakeCodesToPriceMatching(uniqueServiceCodes, priceLevel);
 				if (priceItems.Count == 0) {
 					UpdateTextBox(errorTemplate + Environment.NewLine +
 						"Не удалось обнаружить услуг из прайса для данного набора");
@@ -194,12 +416,12 @@ namespace BaselineMedicalExaminationCalculation {
 			return uniquePlansWithPriceItems;
 		}
 
-		private List<PriceItem> MakeCodesToPriceMatching(List<string> codes, int priceLevel) {
+		private List<PriceItem> MakeCodesToPriceMatching(Dictionary<string, string> codes, int priceLevel) {
 			List<PriceItem> priceItems = new List<PriceItem>();
 
-			foreach(string code in codes) {
+			foreach(KeyValuePair<string, string> code in codes) {
 				PriceItem priceItem = new PriceItem();
-				string keyToSearch = code;
+				string keyToSearch = code.Key;
 
 				if (keyToSearch.Contains("o")) {
 					priceItem.isOptional = true;
@@ -231,6 +453,7 @@ namespace BaselineMedicalExaminationCalculation {
 				}
 
 				priceItem.code = keyToSearch;
+				priceItem.original = code.Value;
 				try {
 					string[] priceLine = price[keyToSearch][0];
 					priceItem.name = priceLine[0];
@@ -247,8 +470,8 @@ namespace BaselineMedicalExaminationCalculation {
 			return priceItems;
 		}
 
-		private List<string> MakeServiceToCodesMatching(List<string> services) {
-			List<string> serviceCodes = new List<string>();
+		private Dictionary<string, string> MakeServiceToCodesMatching(List<string> services) {
+			Dictionary<string, string> serviceCodes = new Dictionary<string, string>();
 
 			foreach(string service in services) {
 				bool isOptional = false;
@@ -286,10 +509,17 @@ namespace BaselineMedicalExaminationCalculation {
 						continue;
 					}
 
-					if (serviceCodes.Contains(code))
+					//skipping if present main service
+					if (serviceCodes.Keys.Contains(code))
 						continue;
 
-					serviceCodes.Add(isOptional ? "o" + code : code);
+					code = isOptional ? "o" + code : code;
+
+					//skipping if present optional service
+					if (serviceCodes.Keys.Contains(code))
+						continue;
+
+					serviceCodes.Add(code, keyToSearch);
 				}
 			}
 

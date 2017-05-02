@@ -38,7 +38,8 @@ namespace BaselineMedicalExaminationCalculation {
         }
 
 		private void ButtonInfo_Click(object sender, EventArgs e) {
-			MessageBox.Show("Help", "123", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			MessageBox.Show("Пример файла для расчета находится в папке с программой " +
+				"под названием 'Пример файла.csv'", "Помощь", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 
 		private void SetControlsState() {

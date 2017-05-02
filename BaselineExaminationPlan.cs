@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BaselineMedicalExaminationCalculation {
 	public class BaselineExaminationPlan {
 		private List<string[]> hazardItems;
-		private List<string[]> serviceItems;
 		private int quantityMan;
 		private int quantityWoman;
 		private int quantityWomanOld;
@@ -64,13 +61,13 @@ namespace BaselineMedicalExaminationCalculation {
 			string result = "";
 			foreach (string[] hazard in hazardItems)
 				try {
-					result += "Прил." + hazard[0] + " п." + hazard[1] + "\t";
+					result += "Прил." + hazard[0] + " п." + hazard[1] + " | ";
 				} catch (Exception e) {
 					LoggingSystem.LogMessageToFile(e.Message + " " + e.StackTrace);
 				}
 
 			if (result.Length > 0)
-				result = result.Substring(0, result.Length - 1);
+				result = result.Substring(0, result.Length - 3);
 
 			return result;
 		}
